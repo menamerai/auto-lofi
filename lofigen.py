@@ -45,12 +45,14 @@ class LofiSynthesize:
         print("Ramdomization completed.")
         return lofi_samples
 
-    def treat_audio(self, output_name, fade_duration=3, sound_amplification=1):
+    def treat_audio(self, output_name, fade_duration=3, sound_amplification=8, start_at=0, end_at=0, music_path={}):
         fade_duration *= 1000
-        main_vid = self.audio + sound_amplification
+        start_at *= 1000
+        end_at *= 1000
+        main_vid = self.audio[start_at:(len(self.audio) - end_at)] + sound_amplification
         main_vid = main_vid.fade_in(fade_duration).fade_out(fade_duration)
         try:
-            lofied_vid = self.apply_lofi(main_vid)
+            lofied_vid = self.apply_lofi(main_vid, music_path)
             print("=" * 15)
             print("Exporting video...")
             lofied_vid.export(output_name + ".mp3", format="mp3")
@@ -59,9 +61,13 @@ class LofiSynthesize:
             print("Error occured whilst trying to lofize, please try again.")
             print(err)
 
-    def apply_lofi(self, audio, drums=True, melody=True, ambience=True, fade_duration=3, emphasize=5):
+    def apply_lofi(self, audio, music_path, drums=True, melody=True, ambience=True, fade_duration=3, emphasize=5):
         fade_duration *= 1000
-        lofi_randomized = self.randomize_lofi()
+        if music_path == {}:
+            print("No path specified. Randomizing the lofization process...")
+            lofi_randomized = self.randomize_lofi()
+        else:
+            lofi_randomized = music_path
         lofied = self.lofied
         if melody:
             print("=" * 15)
@@ -89,7 +95,7 @@ class LofiSynthesize:
                         ambience_audio = AudioSegment.from_mp3(
                             lofi_randomized["ambience"])
                         lofied = lofied.overlay(
-                            ambience_audio - int(emphasize * 1.5), loop=True)
+                            ambience_audio - int(emphasize * 2), loop=True)
                     except Exception as err:
                         print("Problems whilst adding ambience.")
                         print(err)
